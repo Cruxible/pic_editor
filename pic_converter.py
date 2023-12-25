@@ -21,6 +21,7 @@ class HonerableMentions:
     new_filename = "\n New filename?"
     save_pic_where = "\n Save on Desktop or Pictures?"
     exit_program = "\n Exiting the program"
+    intiger_error = " The input is a string."
 
 class MySexyVariables:
     pics_dir = os.path.join(os.path.expanduser("~"), "Pictures")
@@ -34,6 +35,7 @@ class MySexyVariables:
                 "check size",
                 "resize image",
                 "filters",
+                "cut image",
                 "exit"
                 ]
     filter_list = [
@@ -41,7 +43,7 @@ class MySexyVariables:
                 "saturation",
                 "contrast",
                 "brightness",
-                "negative"
+                "negative",
                 ]
 
 class Input:
@@ -335,6 +337,50 @@ class main_functions:
                     print(" Resize Finished.")
                 else:
                     print(' Not a valide format.')
+    
+    def image_cut():
+        calls.picture_list()
+        print(HonerableMentions.old_filename)
+        image_path = Input.get_string_input()
+        if image_path == 'exit':
+            print(HonerableMentions.exit_program)
+            sys.exit()
+        elif image_path.lower().endswith(('.webp', '.png', 'jpg', 'jpeg')):
+            print(' Enter 4 numbers to cut at in pixels.\n points start at left side.\n left side:')
+            left_input = Input.get_string_input()
+            if left_input.isdigit():
+                print(' top side:')
+                top_input = Input.get_string_input()
+                if top_input.isdigit():
+                    print(' right side:')
+                    right_input = Input.get_string_input()
+                    if right_input.isdigit():
+                        print(' bottom side:')
+                        bottom_input = Input.get_string_input()
+                        if bottom_input.isdigit():
+                            os.chdir(os.path.join(os.path.expanduser("~"), "Pictures"))
+                            im = Image.open(image_path)  # Removed int() conversion
+                            # Cropped image of above dimension
+                            # (It will not change original image)
+                            im1 = im.crop((int(left_input), int(top_input), int(right_input), int(bottom_input)))  # Added int() conversion here
+                            # Shows the image in image viewer
+                            im1.show()
+                            os.chdir(os.path.join(os.path.expanduser("~"), "Desktop"))
+                            # Save the cropped image
+                            im1.save("cropped_image.jpeg")
+                            print(' Image Cropped')
+                        else:
+                            print(HonerableMentions.integer_error)
+                            return None
+                    else:
+                        print(HonerableMentions.integer_error)
+                        return None
+                else:
+                    print(HonerableMentions.integer_error)
+                    return None
+            else:
+                print(HonerableMentions.integer_error)
+                return None
 
     def pic_filters():
         calls.list_filters()
@@ -343,6 +389,7 @@ class main_functions:
         if filter_command == 'exit':
             print(HonerableMentions.exit_program)
             sys.exit()
+        
         elif filter_command == 'greyscale':
             calls.picture_list()
             print(HonerableMentions.old_filename)
@@ -419,12 +466,11 @@ class main_functions:
                 print(HonerableMentions.exit_program)
                 sys.exit()
             elif image_path.lower().endswith(('.webp', '.png', 'jpg', 'jpeg')):
-                print(' Enter above 1 for more color\n less than 1 for less color\n Example: .75 or 1.5')
-                lum = Input.get_float_input()  # Get luminance value from user input
+                image = Image.open(image_path)  # Open the image file
                 print(' Enter above 1 for more color\n less than 1 for less color\n Example: .75 or 1.5')
                 contrast = Input.get_float_input()  # Get contrast value from user input
-                clip = mpy.ImageClip(image_path)
-                contrast_adjusted_clip = clip.fx(vfx.lum_contrast, lum=lum, contrast=contrast)
+                enhancer = ImageEnhance.Contrast(image)
+                contrast_img = enhancer.enhance(contrast)
                 print(HonerableMentions.new_filename)
                 new_name = Input.get_string_input()
                 if new_name.lower() == "exit":
@@ -435,11 +481,11 @@ class main_functions:
                     save_dir = Input.get_string_input()
                     if save_dir.lower() == "desktop":
                         os.chdir(MySexyVariables.desktop_dir)
-                        contrast_adjusted_clip.save_frame(new_name)
+                        contrast_img.save(new_name)  # Save the image
                         print(" Filter Applied")
                     elif save_dir.lower() == "pictures":
                         os.chdir(MySexyVariables.pics_dir)
-                        contrast_adjusted_clip.save_frame(new_name)
+                        contrast_img.save(new_name)  # Save the image
                         print(" Filter Applied")
                     else:
                         print(' Not a valid directory.')
@@ -447,6 +493,7 @@ class main_functions:
                     print(' New filename must end in:\n .jpeg, .jpg, .png, .webp.')
             else:
                 print(' Filename must end in:\n .jpeg, .jpg, .png, .webp.')
+
         
         elif filter_command == 'brightness':
             calls.picture_list()
@@ -539,6 +586,8 @@ class Main:
             elif command == MySexyVariables.calls_list[5]:
                 main_functions.pic_filters()
             elif command == MySexyVariables.calls_list[6]:
+                main_functions.image_cut()
+            elif command == MySexyVariables.calls_list[7]:
                 sys.exit()
 
 if __name__ == '__main__':
